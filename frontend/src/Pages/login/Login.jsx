@@ -1,6 +1,6 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
-import Swal from 'sweetalert2'
+import Swal from "sweetalert2";
 import {
   Box,
   Button,
@@ -18,128 +18,113 @@ import {
   ModalCloseButton,
   ModalContent,
   ModalOverlay,
+  useToast,
 } from "@chakra-ui/react";
-import { Navigate, useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import Signup from "../Signup/Signup";
-const intial = {
-  email: "",
-  password: "",
-};
+
+const BASE_URL = process.env.REACT_APP_BASEURL || "http://localhost:8080";
+
 const LoginPage = () => {
-  const [loginData, setLoginData] = useState(intial);
-  const [email, setEmail] = useState();
-  const [password, setPassword] = useState();
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
-const navigate=useNavigate()
   const [isOpen, setIsOpen] = useState(false);
-
-
-  const showToastMessage = () => {
-    toast.success('Login Successfull !', {
-        position: toast.POSITION.TOP_RIGHT
-    });
-};
-
-  let isAuth = JSON.parse(localStorage.getItem("auth")) || false;
-//   let token = JSON.parse(localStorage.getItem("token")) || "";
-  let userdata=JSON.parse(localStorage.getItem("userData")) || "";
-
-
-
+  const navigate = useNavigate();
+  const toast = useToast();
+  const dispatch = useDispatch();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setLoginData({ ...loginData, [name]: value });
-
-    switch (name) {
-      case "email":
-        setEmail(value);
-        break;
-      case "password":
-        setPassword(value);
-        break;
-      default:
-        break;
-    }
+    setLoginData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const loginUser = (info) => {
+  const handleLogin = async () => {
+    if (!loginData.email || !loginData.password) {
+      toast({
+        title: "Please fill in all fields",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+        position: "top",
+      });
+      return;
+    }
+
+    setLoading(true);
     try {
-      const response = fetch(`http://localhost:5000/api/v1/auth/login`, {
+      const res = await fetch(`${BASE_URL}/api/v1/auth/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(info),
-      })
-        .then((response) => response.json())
-        .then((out) => {
-          if (out.success) {
-            localStorage.setItem("token", out.token);
-            localStorage.setItem("userData", JSON.stringify(out.user));
-            localStorage.setItem("auth", JSON.stringify(true));
-            showToastMessage()
-            setTimeout(()=>{
-                navigate("/")
-            },1500)
-         
-           
-           
-          } else {
-            // Registration failed, handle accordingly
-            // alert(out.message);
-            Swal.fire({
-              icon: 'error',
-              title: 'Oops...',
-              text: `${out.message}`,
-              didOpen: () => {
-                  const container = document.querySelector('.swal2-container');
-                  container.style.zIndex = 10000;
-                }
-            });
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(loginData),
+      });
+      const data = await res.json();
 
-            // console.log("2",out.message);
-            // console.log("2", out);
-            // console.log('Failed to register user');
-          }
+      if (data.success) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("userData", JSON.stringify(data.user));
+        localStorage.setItem("auth", JSON.stringify(true));
+        localStorage.setItem("isAdmin", JSON.stringify(false));
+
+        dispatch({
+          type: "LOGIN_SUCCESS",
+          payload: {
+            user: data.user,
+            token: data.token,
+            isAdmin: false,
+          },
         });
+
+        toast({
+          title: "Login Successful!",
+          status: "success",
+          duration: 2000,
+          isClosable: true,
+          position: "top",
+        });
+        setIsOpen(false);
+        setTimeout(() => navigate("/"), 1000);
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Login Failed",
+          text: data.message || "Invalid credentials",
+          didOpen: () => {
+            const container = document.querySelector(".swal2-container");
+            if (container) container.style.zIndex = 10000;
+          },
+        });
+      }
     } catch (error) {
-      //   console.error("Error registering user:", error);
-      //   setAuth(false)
-      console.log("out.2", error);
+      toast({
+        title: "Something went wrong",
+        description: "Please check your connection and try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+        position: "top",
+      });
+    } finally {
+      setLoading(false);
     }
-  };
- 
-
-  const handlesign = () => {
-    // setLoading(true);
-    
-    loginUser(loginData);
-    
-    // console.log(loginData)
-    // setLoading(false);
-  };
-
-  const handleOpen = () => {
-    setIsOpen(true);
-  };
-
-  const handleClose = () => {
-    setIsOpen(false);
   };
 
   return (
     <div>
-      <Center onClick={handleOpen} fontWeight={"400"} fontSize="15px" w="80px">
+      <Center
+        onClick={() => setIsOpen(true)}
+        fontWeight={"400"}
+        fontSize="15px"
+        w="80px"
+        cursor="pointer"
+      >
         Sign In
       </Center>
 
       <Modal
         isOpen={isOpen}
-        onClose={handleClose}
+        onClose={() => setIsOpen(false)}
         isCentered
         size={{ xl: "md", lg: "md", md: "md", sm: "sm", base: "sm" }}
       >
@@ -150,16 +135,15 @@ const navigate=useNavigate()
             bg="white"
             m={"10px 10px 0px 0px"}
           />
-
-          <ModalBody p={"0px 0px "} borderRadius={"15px 15px 15px 15px "}>
+          <ModalBody p={"0px 0px"} borderRadius={"15px 15px 15px 15px"}>
             <Image
               src="https://static1.lenskart.com/media/desktop/img/DesignStudioIcons/DesktopLoginImage.svg"
               alt="pic"
-              borderRadius={"10px 10px 0px 0px "}
+              borderRadius={"10px 10px 0px 0px"}
             />
             <Box m={"34px 45px 50px 45px"}>
               <Heading
-                fontFamily={" Times, serif"}
+                fontFamily={"Times, serif"}
                 fontWeight="100"
                 fontSize={"28px"}
                 mb="24px"
@@ -167,6 +151,7 @@ const navigate=useNavigate()
               >
                 Sign In
               </Heading>
+
               <Input
                 name="email"
                 placeholder="Email"
@@ -174,11 +159,12 @@ const navigate=useNavigate()
                 fontSize="16px"
                 focusBorderColor="rgb(206, 206, 223)"
                 borderColor={"rgb(206, 206, 223)"}
-                value={email}
+                value={loginData.email}
                 onChange={handleChange}
                 rounded="2xl"
-                mb={"5px"}
+                mb={"10px"}
               />
+
               <InputGroup>
                 <Input
                   type={show ? "text" : "password"}
@@ -188,11 +174,10 @@ const navigate=useNavigate()
                   fontSize="16px"
                   focusBorderColor="rgb(206, 206, 223)"
                   borderColor={"rgb(206, 206, 223)"}
-                  value={password}
+                  value={loginData.password}
                   onChange={handleChange}
                   rounded="2xl"
                 />
-
                 <InputRightElement width="6.5rem" size="lg">
                   <Button
                     size="md"
@@ -205,17 +190,14 @@ const navigate=useNavigate()
                   </Button>
                 </InputRightElement>
               </InputGroup>
-              <Box
-                
-                m="15px 0px 0px 0px"
-                color="#000042"
-                fontSize="15px"
-              >
-                Forget Password ?
+
+              <Box m="15px 0px 0px 0px" color="#000042" fontSize="15px" cursor="pointer">
+                Forget Password?
               </Box>
+
               <HStack fontSize="16px">
                 <Checkbox mb={"20px"} mt="20px" size="sm">
-                  Get Update on whatsapp
+                  Get Update on WhatsApp
                 </Checkbox>
                 <Image
                   src="https://static.lenskart.com/media/desktop/img/25-July-19/whatsapp.png"
@@ -223,9 +205,10 @@ const navigate=useNavigate()
                   h="22px"
                 />
               </HStack>
+
               <Button
                 isLoading={loading}
-                onClick={handlesign}
+                onClick={handleLogin}
                 bgColor={"#11daac"}
                 width="100%"
                 borderRadius={"35px/35px"}
@@ -233,21 +216,22 @@ const navigate=useNavigate()
                 fontSize="18px"
                 _hover={{ backgroundColor: "#11daac" }}
               >
-                Sign In
-                <ToastContainer />
+                SIGN IN
               </Button>
-             
+
               <HStack spacing={"0px"} mt="19px" gap="2">
-                <Box fontSize={"14px"}> New member?</Box>
+                <Box fontSize={"14px"}>New member?</Box>
+                <Link fontSize={"15px"} fontWeight="500" textDecoration={"underline"}>
+                  <Signup />
+                </Link>
                 <Link
                   fontSize={"15px"}
-                  fontWeight="500"
+                  fontWeight={"500"}
                   textDecoration={"underline"}
+                  href="/adminlogin"
                 >
-                    <Signup/>
-                 
+                  Login as Admin?
                 </Link>
-                <Link fontSize={"15px"} fontWeight={"500"} textDecoration={"underline"} href="/adminlogin">Login as Admin?</Link>
               </HStack>
             </Box>
           </ModalBody>
@@ -258,3 +242,4 @@ const navigate=useNavigate()
 };
 
 export default LoginPage;
+

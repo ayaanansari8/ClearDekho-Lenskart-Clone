@@ -1,1281 +1,366 @@
-import React, { useState } from "react";
-import { Link, useNavigate, Navigate } from "react-router-dom";
-import { CiHeart } from "react-icons/ci";
-import { CgShoppingCart } from "react-icons/cg";
-import Cleardekhologo from "../Cleardekhologo.png";
-import { MdWifiCalling3 } from "react-icons/md";
-import { TriangleDownIcon } from "@chakra-ui/icons";
-
+// frontend/src/components/Navbar/Navbar.jsx
+import React, { useState, useEffect } from "react";
 import {
   Box,
-  Spacer,
   Flex,
   Text,
-  Image,
-  Input,
-  Button,
   HStack,
-  Center,
-  Avatar,
-  Heading,
-  Grid,
-  Menu,
-  MenuButton,
-  MenuList,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverBody,
+  VStack,
+  IconButton,
+  Button,
+  Input,
+  InputGroup,
+  InputRightElement,
+  Drawer,
+  DrawerBody,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  useDisclosure,
+  Badge,
+  Divider,
 } from "@chakra-ui/react";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { SearchIcon, HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
+import { useSelector } from "react-redux";
 
-import MobileNav from "./MobileNav";
-import Login from "../Pages/login/Login";
-import Signup from "../Pages/Signup/Signup";
+const CartIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+    <line x1="3" y1="6" x2="21" y2="6"/>
+    <path d="M16 10a4 4 0 01-8 0"/>
+  </svg>
+);
 
-const NavbarTopDescription = [
-  {
-    Tag: "Do more, Be More  | ",
-  },
-  {
-    Tag: "Try in 3D  | ",
-  },
-  {
-    Tag: "Store Locator  | ",
-  },
-  {
-    Tag: "Quality  | ",
-  },
-  {
-    Tag: "USA  | ",
-  },
-  {
-    Tag: "Singapore  | ",
-  },
-  {
-    Tag: "UAE  | ",
-  },
-  {
-    Tag: "John Jacobs  | ",
-  },
-  {
-    Tag: "Aqualens  | ",
-  },
-  {
-    Tag: "Cobrowsing  | ",
-  },
-  {
-    Tag: "Engineering Blog  | ",
-  },
-  {
-    Tag: "Lenskart Franchise  | ",
-  },
-  {
-    Tag: "Lenskart Optom Partner Program  ",
-  },
+const UserIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+    <circle cx="12" cy="7" r="4"/>
+  </svg>
+);
+
+const HeartIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+  </svg>
+);
+
+const navLinks = [
+  { label: "Eyeglasses", path: "/eyeglasses" },
+  { label: "Sunglasses", path: "/sunglasses" },
+  { label: "Computer Glasses", path: "/computer-glasses" },
+  { label: "Contact Lenses", path: "/contact-lenses" },
+  { label: "Kids", path: "/kids" },
 ];
 
 const Navbar = () => {
-  let isAuth = JSON.parse(localStorage.getItem("auth")) || false;
-  let userdata = JSON.parse(localStorage.getItem("userData")) || "";
-
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = React.useState(false);
-  const [isEyeglassesOpen, setIsEyeglassesOpen] = useState(false);
-  const [isComputerGlassesOpen, setIsComputerGlassesOpen] = useState(false);
 
-  const showToastMessage = () => {
-    toast.success("Logout Successfull !", {
-      position: toast.POSITION.TOP_RIGHT,
-    });
+  const cartItems = useSelector((state) => state.cart?.cartItems || state.cartReducer?.cartItems || []);
+  const user = useSelector((state) => state.auth?.user || state.userReducer?.user || null);
+  const cartCount = cartItems.length;
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/products?search=${searchQuery}`);
+      setSearchOpen(false);
+      setSearchQuery("");
+    }
   };
 
   return (
-    <Box overflow="hidden" bg="white">
-      <Box display={{ base: "none", xl: "inherit" }} color="blackAlpha.800">
-        {/* Top part of the navbar start */}
-        <Box
-          cursor="pointer"
-          style={{ display: "flex", justifyContent: "space-between" }}
-        >
-          <Flex gap={2} pl={5} pt={2}>
-            {NavbarTopDescription.map((e, index) => (
-              <Box key={index}>
-                <Text fontSize="13px" _hover={{ textDecoration: "underline" }}>
-                  {e.Tag}
-                </Text>
-                <Spacer />
-              </Box>
-            ))}
-          </Flex>
-          <Text
-            fontSize="12px"
-            _hover={{ textDecoration: "underline" }}
-            pr={5}
-            pt={2}
+    <>
+      {/* Announcement bar */}
+      <Box
+        bg="ink.primary"
+        color="white"
+        py="2"
+        textAlign="center"
+        fontSize="2xs"
+        letterSpacing="0.15em"
+        fontFamily="'DM Sans', sans-serif"
+        textTransform="uppercase"
+        display={{ base: "none", md: "block" }}
+      >
+        Free shipping on orders above ₹999 &nbsp;·&nbsp; Try at home — 5 frames free
+      </Box>
+
+      {/* Main Navbar */}
+      <Box
+        as="header"
+        position="sticky"
+        top="0"
+        zIndex="1000"
+        bg={isScrolled ? "rgba(255,255,255,0.97)" : "white"}
+        backdropFilter={isScrolled ? "blur(12px)" : "none"}
+        borderBottom="1px solid"
+        borderColor="surface.border"
+        transition="all 0.3s ease"
+        boxShadow={isScrolled ? "0 2px 20px rgba(0,0,0,0.06)" : "none"}
+      >
+        {/* Desktop layout */}
+        <Box display={{ base: "none", lg: "block" }}>
+          <Flex
+            maxW="1400px"
+            mx="auto"
+            px="12"
+            h="18"
+            align="center"
+            justify="space-between"
           >
-            Contact us
-          </Text>
-        </Box>
-
-        {/* Top part of the navbar end  */}
-
-        {/* Middle part of the navbar start */}
-
-        <Box
-          cursor="pointer"
-          //   onMouseEnter={() => setIsOpen(false)}
-        >
-          <HStack m="auto">
-            <Box w="15%">
-              <Link to="/">
-                <Image
-                  pt={"30px"}
-                  pb={"10px"}
-                  pl={"20px"}
-                  pr={"20px"}
-                  src={Cleardekhologo}
-                  alt="logo"
-                  w="100%"
-                />
-              </Link>
-            </Box>
-            <HStack w="90%" m="auto">
-              <Box w="15%">
-                <HStack fontSize="18px" fontWeight="bold">
-                  <MdWifiCalling3 />
-                  <Text>1800-111-111</Text>
-                </HStack>
-              </Box>
-              <Box w="55%">
-                <Input
-                  placeholder="What are you looking for"
-                  border="1px solid black"
-                  w="95%"
-                  fontSize="17px"
-                  h="45px"
-                />
-              </Box>
-              <HStack w="35%">
-                <Button
-                  size="lg"
-                  bg="white"
-                  _hover={{ bg: "white" }}
-                  fontSize="16px"
-                  fontWeight="400"
-                  //   onClick={() => navigate("History Route")}  history route need to be added
+            {/* Logo - desktop */}
+            <RouterLink to="/">
+              <Box>
+                <Text
+                  fontFamily="'Cormorant Garamond', serif"
+                  fontSize="2xl"
+                  fontWeight="500"
+                  color="ink.primary"
+                  letterSpacing="0.05em"
+                  lineHeight="1"
                 >
-                  Track Order
-                </Button>
-                {isAuth === true ? (
-                  <Popover trigger="hover">
-                    <PopoverTrigger>
-                      <Box
-                        fontWeight={"600"}
-                        fontSize="15px"
-                        m="auto"
-                        mt="-2px"
-                        w="90px"
-                        textAlign="center"
-                      >
-                        {userdata.name}
-                        <TriangleDownIcon
-                          ml="2px"
-                          fontSize={"9px"}
-                          _hover={{ transform: "rotate(180deg)" }}
-                        />
-                      </Box>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      w="120px"
-                      boxShadow={"rgba(0, 0, 0, 0.24) 0px 3px 8px"}
-                    >
-                      <PopoverBody
-                        h={"40px"}
-                        pl="6"
-                        fontSize="15px"
-                        _hover={{ fontWeight: "bold" }}
-                      >
-                        <Box
-                          color="#333368"
-                          onClick={() => {
-                            localStorage.removeItem("auth");
-                            localStorage.removeItem("userData");
-                            localStorage.removeItem("token");
-                            showToastMessage();
-                            setTimeout(() => {
-                              navigate("/");
-                            }, 1000);
-                          }}
-                        >
-                          <ToastContainer />
-                          Sign Out
-                        </Box>
-                      </PopoverBody>
-                    </PopoverContent>
-                  </Popover>
-                ) : (
-                  <Box display={"flex"}>
-                    <Login />
-                    <Signup />
-                  </Box>
-                )}
-
-                <Button
-                  leftIcon={<CiHeart />}
-                  size="lg"
-                  bg="white"
-                  fontSize="16px"
-                  _hover={{ bg: "white" }}
-                  fontWeight="400"
-                  //   onClick={() => navigate("Wishlist Route")}
+                  CLEAR <Text as="span" color="accent.gold">VISION</Text>
+                </Text>
+                <Text
+                  fontSize="2xs"
+                  letterSpacing="0.25em"
+                  color="ink.muted"
+                  textTransform="uppercase"
+                  fontFamily="'DM Sans', sans-serif"
                 >
-                  Wishlist
-                </Button>
-                 <Link to="/cart">     {/*  // Cart route */}
-                  <Button
-                    leftIcon={<CgShoppingCart />}
-                    size="lg"
-                    bg="whiteAlpha.900"
-                    _hover={{ bg: "white" }}
-                    fontSize="16px"
+                  Eyewear Atelier
+                </Text>
+              </Box>
+            </RouterLink>
+
+            {/* Desktop nav links */}
+            <HStack spacing="8">
+              {navLinks.map((link) => (
+                <RouterLink key={link.path} to={link.path}>
+                  <Text
+                    fontSize="xs"
                     fontWeight="400"
+                    letterSpacing="0.1em"
+                    textTransform="uppercase"
+                    color="ink.secondary"
+                    fontFamily="'DM Sans', sans-serif"
+                    position="relative"
+                    _hover={{ color: "ink.primary" }}
+                    sx={{
+                      "::after": {
+                        content: '""',
+                        position: "absolute",
+                        bottom: "-2px",
+                        left: "0",
+                        width: "0",
+                        height: "1px",
+                        bg: "accent.gold",
+                        transition: "width 0.3s ease",
+                      },
+                      "&:hover::after": { width: "100%" },
+                    }}
                   >
-                    Cart
-                  </Button>
-                </Link>
-              </HStack>
+                    {link.label}
+                  </Text>
+                </RouterLink>
+              ))}
             </HStack>
-          </HStack>
-        </Box>
-        {/* Middle part of the navbar end */}
 
-        {/* Lower part of navbar start  */}
-
-        <Box cursor="pointer" bg="#fbf9f7" p={2.5}>
-          <Flex gap={4} pl={5} pt={2} justifyContent="space-between">
-            <Flex bg="#fbf9f7" cursor="pointer" gap="6" alignItems={'center'}>
-              <Menu
-              //    isOpen={isOpen} onClose={() => setIsOpen(false)}
-              >
-                <MenuButton
-                  bg="#fbf9f7"
-                  fontSize="15px"
-                  fontWeight="600"
-                  _hover={{
-                    borderBottom: "4px solid teal",
-                  }}
-                  // onMouseEnter={() => setIsEyeglassesOpen(true)}
-                  //   onMouseLeave={() => setIsEyeglassesOpen(false)}
-
-                  //   onMouseEnter={() => setIsOpen(true)}
-                  //   onMouseLeave={() => setIsOpen(false)}
-                >
-                  EYEGLASSES
-                </MenuButton>
-
-                <MenuList
-                  color="blackAlpha.900"
-                  h="400px"
-                  bg="white"
-                  w="95vw"
-                  p="5"
-                  zIndex={1200}
-                  // onMouseEnter={() => setIsEyeglassesOpen(true)}
-                  // onMouseLeave={() => setIsEyeglassesOpen(false)}
-                  //   onMouseEnter={() => setIsOpen(true)}
-                  //   onMouseLeave={() => setIsOpen(false)}
-                >
-                  <Link to="/eyeglasses">
-                    <Box>
-                      <Grid gridTemplateColumns="repeat(6, 1fr)" w="100%">
-                        <Flex
-                          direction="column"
-                          justifyContent="space-evenly"
-                          mt="20"
-                        >
-                          <Flex
-                            gap="5"
-                            fontSize="15px"
-                            _hover={{ bgColor: "blackAlpha.200" }}
-                          >
-                            <Avatar
-                              name="Male Avatar"
-                              src="https://static.lenskart.com/media/desktop/img/men_pic.png"
-                              alt="men"
-                              size="md"
-                            />
-                            <Box
-                              fontSize="lg"
-                              fontWeight="bold"
-                              _hover={{ textDecoration: "underline" }}
-                            >
-                              Men
-                            </Box>
-                          </Flex>
-
-                          <Flex gap="5" _hover={{ bgColor: "blackAlpha.200" }}>
-                            <Avatar
-                              name="women avatar"
-                              src="https://static.lenskart.com/media/desktop/img/women_pic.png"
-                              alt="women"
-                              size="md"
-                            />
-                            <Box
-                              fontSize="lg"
-                              fontWeight="bold"
-                              _hover={{ textDecoration: "underline" }}
-                            >
-                              Women
-                            </Box>
-                          </Flex>
-
-                          <Flex gap="5" _hover={{ bgColor: "blackAlpha.200" }}>
-                            <Avatar
-                              name="Kids avatar"
-                              src="https://static.lenskart.com/media/desktop/img/kid_pic.png"
-                              alt="kid"
-                              size="md"
-                            />
-                            <Box
-                              fontSize="lg"
-                              fontWeight="bold"
-                              _hover={{ textDecoration: "underline" }}
-                            >
-                              Kids
-                            </Box>
-                          </Flex>
-                        </Flex>
-
-                        <Flex direction="column" gap="6">
-                          <Box
-                            fontSize="md"
-                            fontWeight="bold"
-                            borderBottom="1px solid black"
-                            p="1"
-                          >
-                            SELECT CATEGORY
-                          </Box>
-                          <Box fontSize="md" _hover={{ bg: "blackAlpha.200" }}>
-                            CLASSIC EYE-GLASSES
-                            <p>
-                              Starting From ₹ <span>1000</span>
-                            </p>
-                          </Box>
-                          <Box fontSize="md" _hover={{ bg: "blackAlpha.200" }}>
-                            PREMIUM EYE-GLASSES
-                            <p>
-                              Starting From ₹ <span>3200</span>
-                            </p>
-                          </Box>
-                          <Box
-                            fontSize="md"
-                            _hover={{ bg: "blackAlpha.200" }}
-                            p="2"
-                          >
-                            COMPUTER EYE-GLASSES
-                            <p>
-                              Starting From ₹ <span>599</span>
-                            </p>
-                          </Box>
-                        </Flex>
-
-                        <Flex direction="column" gap="6">
-                          <Box
-                            fontSize="md"
-                            fontWeight="bold"
-                            borderBottom="1px solid black"
-                            p="1"
-                          >
-                            Our Top Picks
-                          </Box>
-                          <Flex direction="column" fontSize="md" gap="2">
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              New Arrivals
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Best Seller
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Lenskart BLU lenses
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Trending</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Tinted Eyeglasses
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Computer Eyeglasses
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Progressive Eyeglasses
-                            </Box>
-                          </Flex>
-                        </Flex>
-
-                        <Flex direction="column" gap="6">
-                          <Box
-                            fontSize="md"
-                            fontWeight="bold"
-                            borderBottom="1px solid black"
-                            p="1"
-                          >
-                            Frame Type
-                          </Box>
-                          <Flex direction="column" fontSize="md" gap="2">
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Rectangle Frames
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Wayfarer Frames
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Round Frames
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Aviator Frames
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Cat-Eye Frames
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Rimless Frames
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Half Rim Frames
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Geometric Frames{" "}
-                            </Box>
-                          </Flex>
-                        </Flex>
-
-                        <Flex direction="column" gap="6">
-                          <Box
-                            fontSize="md"
-                            fontWeight="bold"
-                            borderBottom="1px solid black"
-                            p="1"
-                          >
-                            Collection
-                          </Box>
-                          <Flex direction="column" fontSize="md" gap="2">
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Crystal Clear
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Gradient</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Sleek Steel
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Switch-Magnetic Clips-On
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Air Flex</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Air Wrap</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Classic Acetate
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Series A</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Indian Accent
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Float Pop</Box>
-                          </Flex>
-                        </Flex>
-
-                        <Flex direction="column" gap="6">
-                          <Box
-                            fontSize="md"
-                            fontWeight="bold"
-                            borderBottom="1px solid black"
-                            p="1"
-                          >
-                            Brands
-                          </Box>
-                          <Flex direction="column" fontSize="md" gap="2">
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Vincent Chase
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Lenskart Air
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              John Jacobs
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>OJOS</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              New Balance
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Carrera</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Fossil</Box>
-                          </Flex>
-                        </Flex>
-                      </Grid>
-                    </Box>
-                  </Link>
-                </MenuList>
-              </Menu>
-
-              <Menu>
-                <MenuButton
-                  bg="#fbf9f7"
-                  fontSize="15px"
-                  fontWeight="600"
-                  _hover={{
-                    borderBottom: "4px solid teal",
-                  }}
-                  //   onMouseEnter={() => setIsOpen(true)}
-                >
-                  COMPUTER GLASSES
-                </MenuButton>
-
-                <MenuList
-                  color="blackAlpha.900"
-                  h="400px"
-                  bg="white"
-                  w="95vw"
-                  p="5"
-                  zIndex={1200}
-                  //   onMouseEnter={() => setIsOpen(true)}
-                  //   onMouseLeave={() => setIsOpen(false)}
-                >
-                  <Link to="/eyeglasses">
-                    <Box>
-                      <Grid gridTemplateColumns="repeat(5, 1fr)" w="100%">
-                        <Flex
-                          direction="column"
-                          gap="4"
-                          justifyContent="space-evenly"
-                          mt="20"
-                        >
-                          <Flex gap="5" _hover={{ bgColor: "blackAlpha.200" }}>
-                            <Avatar
-                              name="Men avatar"
-                              src="https://static.lenskart.com/media/desktop/img/men_pic.png"
-                              alt="men"
-                              size="md"
-                            />
-                            <Box
-                              _hover={{ textDecoration: "underline" }}
-                              fontSize="md"
-                              fontWeight="bold"
-                            >
-                              Men
-                            </Box>
-                          </Flex>
-
-                          <Flex gap="5" _hover={{ bgColor: "blackAlpha.200" }}>
-                            <Avatar
-                              name="Women avatar"
-                              src="https://static.lenskart.com/media/desktop/img/women_pic.png"
-                              alt="women"
-                              size="md"
-                            />
-                            <Box
-                              _hover={{ textDecoration: "underline" }}
-                              fontSize="md"
-                              fontWeight="bold"
-                            >
-                              Women
-                            </Box>
-                          </Flex>
-
-                          <Flex gap="5" _hover={{ bgColor: "blackAlpha.200" }}>
-                            <Avatar
-                              name="kids"
-                              src="https://static.lenskart.com/media/desktop/img/kid_pic.png"
-                              alt="kid"
-                              size="md"
-                            />
-                            <Box
-                              _hover={{ textDecoration: "underline" }}
-                              fontSize="md"
-                              fontWeight="bold"
-                            >
-                              Kids
-                            </Box>
-                          </Flex>
-                        </Flex>
-
-                        <Flex direction="column" gap="6">
-                          <Box
-                            fontSize="md"
-                            fontWeight="bold"
-                            borderBottom="1px solid black"
-                            p="1"
-                          >
-                            SELECT CATEGORY
-                          </Box>
-
-                          <Box _hover={{ bg: "blackAlpha.200" }} fontSize="md">
-                            Blu 0 Computer Glasses
-                            <p>
-                              Starting From ₹ <span>1299</span>
-                            </p>
-                          </Box>
-                          <Box _hover={{ bg: "blackAlpha.200" }} fontSize="md">
-                            PREMIUM RANGE
-                            <p>
-                              Starting From ₹ <span>3000</span>
-                            </p>
-                          </Box>
-                        </Flex>
-                      </Grid>
-                    </Box>
-                  </Link>
-                </MenuList>
-              </Menu>
-
-              <Menu>
-                <MenuButton
-                  bg="#fbf9f7"
-                  fontSize="15px"
-                  fontWeight="600"
-                  _hover={{
-                    borderBottom: "4px solid teal",
-                  }}
-                >
-                  KIDS GLASSES
-                </MenuButton>
-
-                <MenuList
-                  color="blackAlpha.900"
-                  h="400"
-                  bg="white"
-                  w="95vw"
-                  zIndex={1200}
-                  //   p="2"
-                >
-                  <Link to="/eyeglasses">
-                    <Box>
-                      <Grid
-                        gridTemplateColumns="repeat(3, 1fr)"
-                        justifyContent="center"
-
-                        // m={"auto"}
-                        // p={"20"}
-                      >
-                        <Box bg="whiteAlpha.900" h="350px" w="240px">
-                          <img
-                            className="navImg1"
-                            src="https://static1.lenskart.com/media/desktop/img/May22/glasses.jpg"
-                            alt="kidsIcon_1"
-                          />
-                          <Box mt="10px" textAlign="center" fontSize="lg">
-                            Eye Glasses
-                          </Box>
-                        </Box>
-                        <Box bg="whiteAlpha.900" h="250px" w="240px">
-                          <img
-                            className="navImg2"
-                            src="https://static1.lenskart.com/media/desktop/img/May22/computer-glasses.jpg"
-                            alt="kidsIcon_2"
-                          />
-                          <Box mt="10px" textAlign="center" fontSize="lg">
-                            Zero Power Computer Glasses
-                          </Box>
-                        </Box>
-                        <Box bg="whiteAlpha.900" h="250px" w="240px">
-                          <img
-                            className="navImg2"
-                            src="https://static1.lenskart.com/media/desktop/img/May22/Sunnies.jpg"
-                            alt="kidsIcon_3"
-                          />
-                          <Box mt="10px" textAlign="center" fontSize="lg">
-                            Sun Glasses
-                          </Box>
-                        </Box>
-                      </Grid>
-                    </Box>
-                  </Link>
-                </MenuList>
-              </Menu>
-
-              <Menu>
-                <MenuButton
-                  bg="#fbf9f7"
-                  fontSize="15px"
-                  fontWeight="600"
-                  _hover={{
-                    borderBottom: "4px solid teal",
-                  }}
-                >
-                  CONTACT LENSES
-                </MenuButton>
-
-                <MenuList
-                  color="blackAlpha.900"
-                  h="400px"
-                  bg="white"
-                  p="5"
-                  w="95vw"
-                  zIndex={1200}
-                >
-                  <Link to="/eyeglasses">
-                    <Box>
-                      <Grid gridTemplateColumns="repeat(5, 1fr)" p="1" w="100%">
-                        <Flex direction="column" gap="6">
-                          <Box
-                            fontSize="md"
-                            fontWeight="bold"
-                            borderBottom="1px solid black"
-                            p="1"
-                          >
-                            Brands
-                          </Box>
-                          <Flex direction="column" gap="2" fontSize="md">
-                            <Box _hover={{ fontWeight: "bold" }}> Aqualens</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Bausch Lomb
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Johnson & Johnson
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Soflens</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Acuvue</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Iconnect</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Alcon</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Air Optix</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Pure Vision
-                            </Box>
-                          </Flex>
-                        </Flex>
-
-                        <Flex direction="column" gap="6">
-                          <Box
-                            fontSize="md"
-                            fontWeight="bold"
-                            borderBottom="1px solid black"
-                            p="1"
-                          >
-                            Explore by Disposability
-                          </Box>
-                          <Flex direction="column" fontSize="md" gap="2">
-                            <Box _hover={{ fontWeight: "bold" }}> Monthly</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Day & Night
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Daily</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Yearly</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Bi-weekly</Box>
-                          </Flex>
-                        </Flex>
-
-                        <Flex direction="column" gap="6">
-                          <Box
-                            fontSize="md"
-                            fontWeight="bold"
-                            borderBottom="1px solid black"
-                            p="1"
-                          >
-                            Explore by Power
-                          </Box>
-                          <Flex direction="column" fontSize="md" gap="2">
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Spherical - (CYL 0.5)
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Spherical + (CYL 0.5)
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Cylindrical Power (0.75)
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Toric Power
-                            </Box>
-                          </Flex>
-                        </Flex>
-
-                        <Flex direction="column" gap="6">
-                          <Box
-                            fontSize="md"
-                            fontWeight="bold"
-                            borderBottom="1px solid black"
-                            p="1"
-                          >
-                            Explore by Colors
-                          </Box>
-                          <Flex direction="column" fontSize="md" gap="2">
-                            <Box _hover={{ fontWeight: "bold" }}>Green</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Blue</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Brown</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Turquoise</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              View all colors
-                            </Box>
-                          </Flex>
-                        </Flex>
-
-                        <Flex direction="column" gap="6">
-                          <Box
-                            fontSize="md"
-                            fontWeight="bold"
-                            borderBottom="1px solid black"
-                            p="1"
-                          >
-                            Solution
-                          </Box>
-                          <Flex direction="column" fontSize="md" gap="2">
-                            <Box _hover={{ fontWeight: "bold" }}>Small</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Large</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              View all solutions
-                            </Box>
-                          </Flex>
-                        </Flex>
-                      </Grid>
-                    </Box>
-                  </Link>
-                </MenuList>
-              </Menu>
-
-              <Menu>
-                <MenuButton
-                  bg="#fbf9f7"
-                  fontSize="15px"
-                  fontWeight="600"
-                  _hover={{
-                    borderBottom: "4px solid teal",
-                  }}
-                >
-                  SUN GLASSES
-                </MenuButton>
-
-                <MenuList
-                  color="blackAlpha.900"
-                  h="400px"
-                  bg="white"
-                  w="100%"
-                  p="5"
-                  zIndex={1200}
-                >
-                  <Link to="/eyeglasses">
-                    <Box>
-                      <Grid gridTemplateColumns="repeat(6, 1fr)">
-                        <Flex direction="column" justifyContent="space-evenly">
-                          <Flex gap="5" _hover={{ bgColor: "blackAlpha.200" }}>
-                            <Avatar
-                              name="men avatar"
-                              src="https://static.lenskart.com/media/desktop/img/men_pic.png"
-                              alt="men"
-                              size="md"
-                            />
-                            <Box
-                              _hover={{ textDecoration: "underline" }}
-                              fontSize="md"
-                              fontWeight="bold"
-                            >
-                              Men
-                            </Box>
-                          </Flex>
-
-                          <Flex
-                            gap="5"
-                            mt="-40%"
-                            _hover={{ bgColor: "blackAlpha.200" }}
-                          >
-                            <Avatar
-                              name="female avatar"
-                              src="https://static.lenskart.com/media/desktop/img/women_pic.png"
-                              alt="women"
-                              size="md"
-                            />
-                            <Box
-                              _hover={{ textDecoration: "underline" }}
-                              fontSize="md"
-                              fontWeight="bold"
-                            >
-                              Women
-                            </Box>
-                          </Flex>
-                        </Flex>
-
-                        <Flex direction="column" gap="6">
-                          <Box
-                            fontSize="md"
-                            fontWeight="bold"
-                            borderBottom="1px solid black"
-                            p="1"
-                          >
-                            SELECT CATEGORY
-                          </Box>
-                          <Box _hover={{ bg: "blackAlpha.200" }} fontSize="md">
-                            CLASSIC SUNGLASSES
-                            <p>
-                              Starting From ₹ <span>1299</span>
-                            </p>
-                          </Box>
-                          <Box
-                            _hover={{ bg: "blackAlpha.200" }}
-                            fontSize="md"
-                            p="2"
-                          >
-                            PREMIUM SUNGLASSES
-                            <p>
-                              Starting From ₹ <span>2500</span>
-                            </p>
-                          </Box>
-                        </Flex>
-
-                        <Flex direction="column" gap="6">
-                          <Box
-                            fontSize="md"
-                            fontWeight="bold"
-                            borderBottom="1px solid black"
-                            p="1"
-                          >
-                            Our Top Picks
-                          </Box>
-                          <Flex direction="column" fontSize="md" gap="2">
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              New Arrivals
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Best Seller
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Pilot Style
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Power Sunglasses
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Polarized Sunglasses
-                            </Box>
-                          </Flex>
-                        </Flex>
-
-                        <Flex direction="column" gap="6">
-                          <Box
-                            fontSize="md"
-                            fontWeight="bold"
-                            borderBottom="1px solid black"
-                            p="1"
-                          >
-                            Shape
-                          </Box>
-                          <Flex direction="column" fontSize="md" gap="2">
-                            <Box _hover={{ fontWeight: "bold" }}>Aviator</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Rounders</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Wayfarer</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Rectangle</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Hexagon</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Cat-Eye</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Clubmaster
-                            </Box>
-                          </Flex>
-                        </Flex>
-
-                        <Flex direction="column" gap="6">
-                          <Box
-                            fontSize="md"
-                            fontWeight="bold"
-                            borderBottom="1px solid black"
-                            p="1"
-                          >
-                            Colections
-                          </Box>
-                          <Flex direction="column" fontSize="md" gap="2">
-                            <Box _hover={{ fontWeight: "bold" }}>Glam Slam</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Havana</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Polarized</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Power Sunglasses
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Designer Sunglasses
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Reflectors
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Marble</Box>
-                            <Box _hover={{ fontWeight: "bold" }}>Tinted</Box>
-                          </Flex>
-                        </Flex>
-
-                        <Flex direction="column" gap="6">
-                          <Box
-                            fontSize="md"
-                            fontWeight="bold"
-                            borderBottom="1px solid black"
-                            p="1"
-                          >
-                            Brand
-                          </Box>
-                          <Flex direction="column" fontSize="md" gap="2">
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              Vincent Chase
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>
-                              John Jacobs
-                            </Box>
-                            <Box _hover={{ fontWeight: "bold" }}>OJOS</Box>
-                          </Flex>
-                        </Flex>
-                      </Grid>
-                    </Box>
-                  </Link>
-                </MenuList>
-              </Menu>
-
-              <Menu>
-                <MenuButton
-                  bg="#fbf9f7"
-                  fontSize="15px"
-                  fontWeight="600"
-                  _hover={{
-                    borderBottom: "4px solid teal",
-                  }}
-                >
-                  HOME EYE-TEST
-                </MenuButton>
-
-                <MenuList
-                  color="blackAlpha.900"
-                  h="400px"
-                  bg="white"
-                  w="100%"
-                  zIndex={1200}
-                >
-                  <Box>
-                    <Grid gridTemplateColumns="repeat(2, 1fr)">
-                      <Box>
-                        <Image
-                          h="100%"
-                          w="100%"
-                          src="https://static1.lenskart.com/media/desktop/img/HomeTryOut.png"
-                          alt="doctor_img"
-                        />
-                      </Box>
-                      <Box>
-                        <Box m="auto">
-                          <Heading
-                            color="black"
-                            fontWeight=""
-                            fontSize="5xl"
-                            fontFamily="sans-serif"
-                            textAlign="center"
-                            mt="10%"
-                          >
-                            Get your eyes checked <br />
-                            <span>at home</span>
-                          </Heading>
-                          <Text
-                            color="black"
-                            fontSize="lg"
-                            fontWeight="400"
-                            textAlign="center"
-                            mt="2%"
-                          >
-                            A certified refractionist will visit you with
-                          </Text>
-                          <Text
-                            color="black"
-                            fontSize="lg"
-                            fontWeight="400"
-                            textAlign="center"
-                            mt="2%"
-                          >
-                            latest eye testing machines & 100 trail frames
-                          </Text>
-                          <Button
-                            colorScheme="black"
-                            variant="outline"
-                            bg="whiteAlpha.900"
-                            rounded="50px"
-                            p="7"
-                            fontSize="15px"
-                            mt="20"
-                            ml="30%"
-                            _hover={{ bg: "#020043", color: "white" }}
-                          >
-                            Book appointment
-                          </Button>
-                        </Box>
-                      </Box>
-                    </Grid>
-                  </Box>
-                </MenuList>
-              </Menu>
-
-              <Menu>
-                <MenuButton
-                  bg="#fbf9f7"
-                  fontSize="15px"
-                  fontWeight="600"
-                  _hover={{
-                    borderBottom: "4px solid teal",
-                  }}
-                >
-                  STORE LOCATOR
-                </MenuButton>
-
-                <MenuList
-                  color="blackAlpha.900"
-                  h="400px"
-                  bg="white"
-                  w="100%"
-                  p="5"
-                  zIndex={1200}
-                >
-                  <Grid gridTemplateColumns="repeat(2, 1fr)" gap={"50px"}>
-                    <Box>
-                      <Heading
-                        color="black"
-                        fontWeight=""
-                        fontSize="50px"
-                        fontFamily="sans-serif"
-                        textAlign="center"
-                        mt="15%"
-                      >
-                        Over 1100+ Lenskart Store
-                      </Heading>
-                      <Box
-                        color="black"
-                        fontSize="15px"
-                        textAlign="center"
-                        mt="6%"
-                      >
-                        Experience eyewear in a whole new way: Visit your
-                        nearest store
-                      </Box>
-                      <Box
-                        color="black"
-                        fontSize="15px"
-                        textAlign="center"
-                        mt="1.5%"
-                      >
-                        and treat yourself to 5000+ eyewear styles.
-                      </Box>
-                      <Button
-                        colorScheme="black"
-                        variant="outline"
-                        bg="whiteAlpha.900"
-                        rounded="50px"
-                        p="6"
-                        fontSize="15px"
-                        mt="10"
-                        ml="30%"
-                        _hover={{ bg: "#020043", color: "white" }}
-                      >
-                        Locate a store
-                      </Button>
-                    </Box>
-                    <Flex mt="30%" fontSize="14px" fontWeight="600">
-                      <Box>
-                        <Image
-                          h=""
-                          w=""
-                          src="https://static.lenskart.com/media/desktop/img/Delhi1.png"
-                          alt="Delhi"
-                        ></Image>
-                        <Text mt="-8px" ml="22px">
-                          Delhi
-                        </Text>
-                      </Box>
-                      <Box>
-                        <Image
-                          h=""
-                          w=""
-                          src="https://static.lenskart.com/media/desktop/img/Banglore1.png"
-                          alt="Banglore"
-                        ></Image>
-                        <Text mt="-8px" ml="15px">
-                          Banglore
-                        </Text>
-                      </Box>
-                      <Box>
-                        <Image
-                          h=""
-                          w=""
-                          src="https://static.lenskart.com/media/desktop/img/Mumbai1.png"
-                          alt="Mumbai"
-                        ></Image>
-                        <Text mt="-8px" ml="15px">
-                          Mumbai
-                        </Text>
-                      </Box>
-                      <Box>
-                        <Image
-                          h=""
-                          w=""
-                          src="https://static.lenskart.com/media/desktop/img/Ahmedabad1.png"
-                          alt="Ahemdabad"
-                        ></Image>
-                        <Text mt="-8px" ml="10px">
-                          Ahmedabad
-                        </Text>
-                      </Box>
-                      <Box>
-                        <Image
-                          h=""
-                          w=""
-                          src="https://static.lenskart.com/media/desktop/img/Chennai1.png"
-                          alt="Chennai"
-                        ></Image>
-                        <Text mt="-8px" ml="15px">
-                          Chennai
-                        </Text>
-                      </Box>
-                      <Box>
-                        <Image
-                          h=""
-                          w=""
-                          src="https://static.lenskart.com/media/desktop/img/Hyderabad1.png"
-                          alt="Hyderabad"
-                        ></Image>
-                        <Text mt="-8px" ml="15px">
-                          Hyderabad
-                        </Text>
-                      </Box>
-                      <Box>
-                        <Image
-                          h=""
-                          w=""
-                          src="https://static.lenskart.com/media/desktop/img/Cities1.png"
-                          alt="+100_cities"
-                        ></Image>
-                        <Text mt="-8px" ml="15px">
-                          +100 cities
-                        </Text>
-                      </Box>
-                    </Flex>
-                  </Grid>
-                </MenuList>
-              </Menu>
-              {userdata.role=="admin"?<Link to={'/admindashboard'} style={{fontSize:"15px",fontWeight:"600"}}>ADMIN</Link>:null}
-            </Flex>
-
-            <HStack w="20%" ml="5%" justifyContent="right">
-              <Image
-                src="https://static1.lenskart.com/media/desktop/img/May22/3dtryon1.png"
-                alt="img1"
-                w="70px"
-                borderRadius="base"
+            {/* Right icons */}
+            <HStack spacing="4">
+              <IconButton
+                icon={searchOpen ? <CloseIcon boxSize="3" /> : <SearchIcon boxSize="4" />}
+                variant="ghost" size="sm" aria-label="Search"
+                color="ink.secondary" _hover={{ color: "ink.primary", bg: "surface.card" }}
+                onClick={() => setSearchOpen(!searchOpen)}
               />
-              <Image
-                src="https://static1.lenskart.com/media/desktop/img/Mar22/13-Mar/blulogo.png"
-                alt="img2"
-                w="70px"
-                borderRadius="base"
+              <IconButton
+                icon={<HeartIcon size={18} />}
+                variant="ghost" size="sm" aria-label="Wishlist"
+                color="ink.secondary" _hover={{ color: "ink.primary", bg: "surface.card" }}
+                as={RouterLink} to="/wishlist"
               />
-              <Image
-                src="https://static.lenskart.com/media/desktop/img/Feb22/18-Feb/goldlogo.jpg"
-                alt="img3"
-                w="70px"
-                borderRadius="base"
+              <IconButton
+                icon={<UserIcon size={18} />}
+                variant="ghost" size="sm" aria-label="Account"
+                color="ink.secondary" _hover={{ color: "ink.primary", bg: "surface.card" }}
+                as={RouterLink} to={user ? "/profile" : "/login"}
               />
+              <Box position="relative">
+                <IconButton
+                  icon={<CartIcon size={18} />}
+                  variant="ghost" size="sm" aria-label="Cart"
+                  color="ink.secondary" _hover={{ color: "ink.primary", bg: "surface.card" }}
+                  as={RouterLink} to="/cart"
+                />
+                {cartCount > 0 && (
+                  <Badge
+                    position="absolute" top="-1" right="-1"
+                    bg="ink.primary" color="white" borderRadius="full"
+                    fontSize="2xs" minW="5" h="5"
+                    display="flex" alignItems="center" justifyContent="center"
+                    fontFamily="'DM Sans', sans-serif" fontWeight="500"
+                  >
+                    {cartCount}
+                  </Badge>
+                )}
+              </Box>
             </HStack>
           </Flex>
+        </Box>
+
+        {/* Mobile layout */}
+        <Box display={{ base: "block", lg: "none" }}>
+          <Flex
+            px="4"
+            h="16"
+            align="center"
+            justify="space-between"
+          >
+            {/* Hamburger */}
+            <IconButton
+              icon={<HamburgerIcon />}
+              variant="ghost" size="sm" aria-label="Menu"
+              onClick={onOpen} color="ink.primary"
+            />
+
+            {/* Logo - mobile, truly centered */}
+            <RouterLink to="/">
+              <Text
+                fontFamily="'Cormorant Garamond', serif"
+                fontSize="xl"
+                fontWeight="500"
+                color="ink.primary"
+                letterSpacing="0.05em"
+                lineHeight="1"
+                whiteSpace="nowrap"
+              >
+                CLEAR <Text as="span" color="accent.gold">VISION</Text>
+              </Text>
+            </RouterLink>
+
+            {/* Right icons mobile */}
+            <HStack spacing="1">
+              <IconButton
+                icon={<SearchIcon boxSize="4" />}
+                variant="ghost" size="sm" aria-label="Search"
+                color="ink.secondary"
+                onClick={() => setSearchOpen(!searchOpen)}
+              />
+              <Box position="relative">
+                <IconButton
+                  icon={<CartIcon size={18} />}
+                  variant="ghost" size="sm" aria-label="Cart"
+                  color="ink.secondary"
+                  as={RouterLink} to="/cart"
+                />
+                {cartCount > 0 && (
+                  <Badge
+                    position="absolute" top="-1" right="-1"
+                    bg="ink.primary" color="white" borderRadius="full"
+                    fontSize="2xs" minW="5" h="5"
+                    display="flex" alignItems="center" justifyContent="center"
+                  >
+                    {cartCount}
+                  </Badge>
+                )}
+              </Box>
+            </HStack>
+          </Flex>
+        </Box>
+
+        {/* Search bar */}
+        <Box
+          overflow="hidden"
+          maxH={searchOpen ? "80px" : "0"}
+          transition="max-height 0.3s ease"
+          borderTop={searchOpen ? "1px solid" : "none"}
+          borderColor="surface.border"
+          bg="surface.warm"
+        >
+          <Box maxW="1400px" mx="auto" px={{ base: "4", lg: "12" }} py="4">
+            <form onSubmit={handleSearch}>
+              <InputGroup maxW="600px" mx="auto">
+                <Input
+                  placeholder="Search for frames, lenses, brands..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus={searchOpen}
+                  fontSize="sm" h="11" bg="white"
+                  border="1px solid" borderColor="surface.border"
+                  borderRadius="none"
+                  _focus={{ borderColor: "ink.primary", boxShadow: "none" }}
+                  fontFamily="'DM Sans', sans-serif"
+                />
+                <InputRightElement h="full" pr="1">
+                  <IconButton
+                    type="submit" icon={<SearchIcon boxSize="3" />}
+                    size="sm" variant="ghost" aria-label="Search" color="ink.muted"
+                  />
+                </InputRightElement>
+              </InputGroup>
+            </form>
+          </Box>
         </Box>
       </Box>
 
-      {/* Lower Navbar Completed  */}
-
-      <MobileNav />
-    </Box>
+      {/* Mobile Drawer */}
+      <Drawer isOpen={isOpen} placement="left" onClose={onClose} size="xs">
+        <DrawerOverlay bg="rgba(0,0,0,0.4)" />
+        <DrawerContent borderRadius="0" bg="surface.warm">
+          <DrawerCloseButton mt="2" />
+          <DrawerHeader
+            fontFamily="'Cormorant Garamond', serif"
+            fontSize="xl" fontWeight="500" color="ink.primary"
+            borderBottom="1px solid" borderColor="surface.border" pb="4"
+          >
+            CLEAR <Text as="span" color="accent.gold">VISION</Text>
+          </DrawerHeader>
+          <DrawerBody px="0">
+            <VStack align="stretch" spacing="0">
+              {navLinks.map((link) => (
+                <Box key={link.path}>
+                  <RouterLink to={link.path} onClick={onClose}>
+                    <Box px="6" py="4" _hover={{ bg: "surface.card" }} transition="bg 0.2s">
+                      <Text
+                        fontSize="sm" letterSpacing="0.08em"
+                        textTransform="uppercase"
+                        fontFamily="'DM Sans', sans-serif"
+                        color="ink.secondary" fontWeight="400"
+                      >
+                        {link.label}
+                      </Text>
+                    </Box>
+                  </RouterLink>
+                  <Divider borderColor="surface.border" />
+                </Box>
+              ))}
+            </VStack>
+            <Box px="6" pt="8">
+              <Button
+                variant="solid" size="md" w="full"
+                as={RouterLink} to={user ? "/profile" : "/login"}
+                onClick={onClose}
+              >
+                {user ? "My Account" : "Sign In"}
+              </Button>
+            </Box>
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+    </>
   );
 };
 

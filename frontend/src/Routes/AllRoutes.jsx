@@ -10,18 +10,20 @@ import Payment from '../Components/Products/Payment';
 import Cart from '../Components/Products/cart';
 import AdminLogin from '../Pages/AdminLogin';
 import AdminOrders from '../Pages/AdminOrders';
-
-
+import Login from '../Pages/login/Login';
+import Signup from '../Pages/Signup/Signup';
 
 const AllRoutes = () => {
     return (
         <Routes>
             <Route path='/' element={<Home />} />
+            <Route path='/login' element={<Login />} />
+            <Route path='/signup' element={<Signup />} />
             <Route path='/admindashboard' element={<AdminDashboard/>}/>
             <Route path="/eyeglasses/:id" element={<SinglePage />} />
             <Route path='/eyeglasses' element={<Product />} />
             <Route path='/adminproducts' element={<AdminProducts />} />
-            <Route path="/allusers" element={<AllUsers/>}></Route>
+            <Route path="/allusers" element={<AllUsers/>}/>
             <Route path='/adminproducts/update/:id' element={<AdminProductEdit />} />
             <Route path='/payment' element={<Payment />} />
             <Route path='/cart' element={<Cart />} />
