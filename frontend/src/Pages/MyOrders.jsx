@@ -40,7 +40,6 @@ const OrderCard = ({ order }) => {
       transition="all 0.2s"
     >
       <HStack spacing={0} align="stretch">
-        {/* Product Image */}
         <Box w="140px" minW="140px" bg="gray.50" p={3}>
           <Image
             src={order.image}
@@ -52,7 +51,6 @@ const OrderCard = ({ order }) => {
           />
         </Box>
 
-        {/* Order Details */}
         <Box flex={1} p={4}>
           <Flex justify="space-between" align="flex-start">
             <Box flex={1} mr={3}>
@@ -80,7 +78,6 @@ const OrderCard = ({ order }) => {
               )}
             </Box>
 
-            {/* Status Badge */}
             <Badge
               colorScheme={status.color}
               px={3}
@@ -120,8 +117,11 @@ const MyOrders = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
+        const userData = JSON.parse(localStorage.getItem("userData")) || {};
+        const userID = userData._id || userData.id || "guest";
         const res = await axios.get(`${process.env.REACT_APP_BASEURL}/orders`);
-        setOrders(res.data);
+        const userOrders = res.data.filter(o => o.userID === userID);
+        setOrders(userOrders);
       } catch (err) {
         setError("Could not load orders. Please try again.");
       } finally {
@@ -136,7 +136,6 @@ const MyOrders = () => {
   return (
     <Box minH="100vh" bg="gray.50" py={10}>
       <Container maxW="3xl">
-        {/* Header */}
         <Box mb={8}>
           <HStack spacing={3} mb={1}>
             <Icon as={FiPackage} boxSize={6} color="teal.500" />
@@ -149,7 +148,6 @@ const MyOrders = () => {
           </Text>
         </Box>
 
-        {/* Summary Strip */}
         {!loading && !error && orders.length > 0 && (
           <SimpleGrid columns={2} spacing={4} mb={6}>
             <Box bg="teal.50" borderRadius="xl" p={4} border="1px solid" borderColor="teal.100">
@@ -167,7 +165,6 @@ const MyOrders = () => {
           </SimpleGrid>
         )}
 
-        {/* Content */}
         {loading ? (
           <Center py={20}>
             <VStack spacing={3}>

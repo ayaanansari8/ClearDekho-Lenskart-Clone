@@ -3,17 +3,15 @@ import {
     Progress, Box, ButtonGroup, Button, Heading, Flex,
     FormControl, GridItem, FormLabel, Input, Select,
     SimpleGrid, InputGroup, InputRightElement, RadioGroup,
-    Radio, Stack, Text, Divider, VStack, HStack, Image,
+    Radio, Stack, Text, Divider, VStack, HStack,
 } from '@chakra-ui/react';
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
-import { useToast } from '@chakra-ui/react';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearCart } from '../../redux/cartReducer/action';
 import axios from 'axios';
 
-// ── Step 1: Shipping Address ──────────────────────────────────────────────────
 const Form2 = () => (
     <>
         <Heading w="100%" textAlign={'center'} fontWeight="normal" mb="2%">
@@ -57,7 +55,6 @@ const Form2 = () => (
     </>
 );
 
-// ── Step 2: Payment ───────────────────────────────────────────────────────────
 const Form3 = ({ paymentMethod, setPaymentMethod }) => {
     const [showCVV, setShowCVV] = useState(false);
 
@@ -67,20 +64,16 @@ const Form3 = ({ paymentMethod, setPaymentMethod }) => {
                 Payment
             </Heading>
 
-            {/* Payment Method Selector */}
             <FormControl mb="6">
                 <FormLabel fontWeight="semibold" fontSize="sm" color="gray.700" mb="3">
                     Select Payment Method
                 </FormLabel>
                 <RadioGroup value={paymentMethod} onChange={setPaymentMethod}>
                     <Stack spacing="3">
-                        {/* Card */}
                         <Box
                             border="2px solid"
                             borderColor={paymentMethod === 'card' ? 'teal.400' : 'gray.200'}
-                            rounded="md"
-                            p="4"
-                            cursor="pointer"
+                            rounded="md" p="4" cursor="pointer"
                             onClick={() => setPaymentMethod('card')}
                             transition="all 0.2s"
                         >
@@ -96,13 +89,10 @@ const Form3 = ({ paymentMethod, setPaymentMethod }) => {
                             </Radio>
                         </Box>
 
-                        {/* UPI */}
                         <Box
                             border="2px solid"
                             borderColor={paymentMethod === 'upi' ? 'teal.400' : 'gray.200'}
-                            rounded="md"
-                            p="4"
-                            cursor="pointer"
+                            rounded="md" p="4" cursor="pointer"
                             onClick={() => setPaymentMethod('upi')}
                             transition="all 0.2s"
                         >
@@ -118,13 +108,10 @@ const Form3 = ({ paymentMethod, setPaymentMethod }) => {
                             </Radio>
                         </Box>
 
-                        {/* COD */}
                         <Box
                             border="2px solid"
                             borderColor={paymentMethod === 'cod' ? 'teal.400' : 'gray.200'}
-                            rounded="md"
-                            p="4"
-                            cursor="pointer"
+                            rounded="md" p="4" cursor="pointer"
                             onClick={() => setPaymentMethod('cod')}
                             transition="all 0.2s"
                         >
@@ -138,7 +125,6 @@ const Form3 = ({ paymentMethod, setPaymentMethod }) => {
 
             <Divider mb="4" />
 
-            {/* Card Fields */}
             {paymentMethod === 'card' && (
                 <SimpleGrid columns={1} spacing={4}>
                     <FormControl isRequired>
@@ -169,7 +155,6 @@ const Form3 = ({ paymentMethod, setPaymentMethod }) => {
                 </SimpleGrid>
             )}
 
-            {/* UPI Fields */}
             {paymentMethod === 'upi' && (
                 <SimpleGrid columns={1} spacing={4}>
                     <FormControl isRequired>
@@ -182,7 +167,6 @@ const Form3 = ({ paymentMethod, setPaymentMethod }) => {
                 </SimpleGrid>
             )}
 
-            {/* COD Info */}
             {paymentMethod === 'cod' && (
                 <Box bg="orange.50" border="1px solid" borderColor="orange.200" rounded="md" p="4">
                     <VStack align="start" spacing="2">
@@ -196,7 +180,6 @@ const Form3 = ({ paymentMethod, setPaymentMethod }) => {
     );
 };
 
-// ── Main Payment Component ────────────────────────────────────────────────────
 export default function Payment() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -207,6 +190,10 @@ export default function Payment() {
     const cartItems = useSelector((state) => state.cartReducer?.cartItems || []);
 
     const handlePlaceOrder = async () => {
+        const userData = JSON.parse(localStorage.getItem("userData")) || {};
+        const userID = userData._id || userData.id || "guest";
+        const userName = userData.name || userData.username || "Guest User";
+
         const orderPayload = cartItems.map((item) => ({
             title: item.title || item.name,
             image: item.image,
@@ -214,10 +201,12 @@ export default function Payment() {
             quantity: item.quantity || 1,
             paymentMethod,
             status: 'Placed',
+            userID,
+            userName,
         }));
 
         try {
-            await axios.post(`${process.env.REACT_APP_BASEURL}/order`, orderPayload);
+            await axios.post(`${process.env.REACT_APP_BASEURL}/orders`, orderPayload);
         } catch (err) {
             console.error('Order save failed:', err);
         }

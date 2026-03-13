@@ -1,3 +1,4 @@
+import EyeglassesList from '../Pages/EyeglassesList';
 import { Routes, Route } from 'react-router-dom';
 import AdminDashboard from '../Pages/AdminDashboard';
 import Home from '../Pages/Homepage/Home';
@@ -13,6 +14,7 @@ import AdminSignup from '../Pages/AdminSignup';
 import AdminOrders from '../Pages/AdminOrders';
 import Login from '../Pages/login/Login';
 import Signup from '../Pages/Signup/Signup';
+import MyOrders from '../Pages/MyOrders';
 
 const AllRoutes = () => {
     return (
@@ -21,8 +23,8 @@ const AllRoutes = () => {
             <Route path='/login' element={<Login />} />
             <Route path='/signup' element={<Signup />} />
             <Route path='/admindashboard' element={<AdminDashboard/>}/>
-            <Route path="/eyeglasses/:id" element={<SinglePage />} />
-            <Route path='/eyeglasses' element={<Product />} />
+            <Route path="/eyeglasses/:id" element={<Product />} />
+            <Route path='/eyeglasses' element={<EyeglassesList />} />
             <Route path='/adminproducts' element={<AdminProducts />} />
             <Route path="/allusers" element={<AllUsers/>}/>
             <Route path='/adminproducts/update/:id' element={<AdminProductEdit />} />
@@ -31,6 +33,7 @@ const AllRoutes = () => {
             <Route path='/adminlogin' element={<AdminLogin/>}/>
             <Route path='/adminsignup' element={<AdminSignup/>}/>
             <Route path='/adminorders' element={<AdminOrders/>}/>
+            <Route path='/myorders' element={<MyOrders/>}/>
         </Routes>
     )
 };
