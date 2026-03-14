@@ -28,17 +28,6 @@ const AdminOrders=() => {
     const [update,setUpdate]=useState(false);
     const toast=useToast();
 
-    // const handleDelete=(id)=>{
-    //     axios.delete(`http://localhost:8080/eyeglasses/delete/${id}`)
-    //     .then((res)=>{
-    //         console.log(res);
-    //         setUpdate(!update)
-    //     })
-    //     .catch((err)=>{
-    //         console.log(err);
-    //     })
-    // }
-
     const handleUpdate=(ID)=>{
         let payload={status:""}
         data.map((el)=>{
@@ -82,134 +71,89 @@ const AdminOrders=() => {
     const bg = useColorModeValue("white", "gray.800");
     const bg2 = useColorModeValue("white", "gray.800");
     const bg3 = useColorModeValue("gray.100", "gray.700");
+
     return (
         <>
         <AdminNavbar/>
         <Text fontSize={'2xl'} w={'100%'} m={'auto'} textDecoration={'underline'}>List of All Orders</Text>
       <Flex
         w="full"
-        // bg="#edf3f8"
-        _dark={{
-          bg: "#3e3e3e",
-        }}
+        _dark={{ bg: "#3e3e3e" }}
         p={5}
         alignItems="center"
         justifyContent="center"
       >
-        <Stack
-          direction={{
-            base: "column",
-          }}
-          w="full"
-          bg={{
-            md: bg,
-          }}
-          shadow="lg"
-        >
-          {data.map((token, tid) => {
-            return (
-              <Flex
-                direction={{
-                  base: "row",
-                  md: "column",
-                }}
-                bg={bg2}
-                key={tid}
+        <Stack direction={{ base: "column" }} w="full" bg={{ md: bg }} shadow="lg">
+
+          {/* Header — rendered once, outside the map */}
+          <SimpleGrid
+            spacingY={3}
+            columns={{ base: 1, md: 5 }}
+            w={{ base: 120, md: "full" }}
+            textTransform="uppercase"
+            bg={bg3}
+            color={'black'}
+            py={{ base: 1, md: 4 }}
+            px={{ base: 2, md: 10 }}
+            fontSize="md"
+            fontWeight="medium"
+          >
+            <span>User Name</span>
+            <span>Price</span>
+            <span>Status</span>
+            <span>Image</span>
+            <chakra.span textAlign={{ md: "right" }}>Action</chakra.span>
+          </SimpleGrid>
+
+          {/* Rows */}
+          {data.map((token, tid) => (
+            <SimpleGrid
+              key={tid}
+              spacingY={3}
+              columns={{ base: 1, md: 5 }}
+              alignItems={'center'}
+              w="full"
+              py={2}
+              px={10}
+              textColor={'gray.500'}
+              fontWeight="semibold"
+              borderBottom="1px solid"
+              borderColor="gray.100"
+            >
+              <span>{token.userName}</span>
+              <chakra.span textOverflow="ellipsis" overflow="hidden" whiteSpace="nowrap">
+                ₹{token.price}
+              </chakra.span>
+              <chakra.span
+                textOverflow="ellipsis"
+                overflow="hidden"
+                whiteSpace="nowrap"
+                color={
+                  token.status === 'Cancelled' ? 'red.400' :
+                  token.status === 'Delivered' ? 'green.400' :
+                  token.status === 'Shipped'   ? 'purple.400' :
+                  'orange.400'
+                }
               >
-                <SimpleGrid
-                  spacingY={3}
-                  columns={{
-                    base: 1,
-                    md: 5,
-                  }}
-                  w={{
-                    base: 120,
-                    md: "full",
-                  }}
-                  textTransform="uppercase"
-                  bg={bg3}
-                  color={'black'}
-                  py={{
-                    base: 1,
-                    md: 4,
-                  }}
-                  px={{
-                    base: 2,
-                    md: 10,
-                  }}
-                  fontSize="md"
-                  fontWeight="medium"
-                >
-                  <span>User Name</span>
-                  <span>Price</span>
-                  <span>Status</span>
-                  <span>Image</span>
-                  <chakra.span
-                    textAlign={{
-                      md: "right",
-                    }}
-                  >
-                    Action
-                  </chakra.span>
-                </SimpleGrid>
-                <SimpleGrid
-                  spacingY={3}
-                  columns={{
-                    base: 1,
-                    md: 5,
-                  }}
-                  alignItems={'center'}
-                  w="full"
-                  py={2}
-                  px={10}
-                  textColor={'gray.500'}
-                  fontWeight="semibold"
-                >
-                  <span>{token.userName}</span>
-                  <chakra.span
-                    textOverflow="ellipsis"
-                    overflow="hidden"
-                    whiteSpace="nowrap"
-                  >
-                    ₹{token.price}
-                  </chakra.span>
-                  <chakra.span
-                    textOverflow="ellipsis"
-                    overflow="hidden"
-                    whiteSpace="nowrap"
-                  >
-                    {token.status}
-                  </chakra.span>
-                  <Flex justifyContent={'center'}>
-                    <Image w={'100px'} src={token.image}/>
-                  </Flex>
-                  <Flex
-                    justify={{
-                      base:'center',
-                      md: "end",
-                    }}
-                  >
-                    <ButtonGroup variant="solid" size="md">
-                      <IconButton
-                        isDisabled={token.status=="Delivered"?true:false}
-                        onClick={()=>handleUpdate(token._id)}
-                        colorScheme="green"
-                        icon={<AiFillEdit />}
-                        aria-label="Edit"
-                      />
-                      {/* <IconButton
-                        onClick={()=>handleDelete(token._id)}
-                        colorScheme="red"
-                        variant="solid"
-                        icon={<BsFillTrashFill />}
-                        aria-label="Delete"
-                      /> */}
-                    </ButtonGroup>
-                  </Flex>
-                </SimpleGrid>
+                {token.status}
+              </chakra.span>
+              <Flex justifyContent={'center'}>
+                <Image w={'100px'} src={token.image}/>
               </Flex>
-            );
-          })}
+              <Flex justify={{ base:'center', md: "end" }}>
+                <ButtonGroup variant="solid" size="md">
+                  <IconButton
+                    isDisabled={token.status === "Delivered" || token.status === "Cancelled"}
+                    onClick={() => handleUpdate(token._id)}
+                    colorScheme="green"
+                    icon={<AiFillEdit />}
+                    aria-label="Edit"
+                  />
+                </ButtonGroup>
+              </Flex>
+            </SimpleGrid>
+          ))}
+
         </Stack>
       </Flex>
       </>
