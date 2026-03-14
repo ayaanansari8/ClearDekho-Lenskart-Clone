@@ -19,6 +19,13 @@ import {
   SimpleGrid,
   Container,
   Stack,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -267,10 +274,54 @@ const GlobalStyles = () => (
       border-right: 1px solid var(--c-border);
       border-bottom: 1px solid var(--c-border);
       padding: 40px 32px;
+      cursor: pointer;
+      transition: background 0.2s;
     }
+    .usp-cell:hover { background: rgba(201,168,76,0.04); }
     .usp-icon {
       font-size: 28px; margin-bottom: 20px;
       color: var(--c-gold); display: block;
+    }
+    .usp-arrow {
+      display: inline-block;
+      margin-top: 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--c-gold);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .usp-cell:hover .usp-arrow { opacity: 1; }
+
+    /* ── USP Modal ── */
+    .usp-modal-content {
+      background: #111 !important;
+      border: 1px solid rgba(255,255,255,0.08) !important;
+      border-radius: 0 !important;
+    }
+    .usp-modal-header {
+      font-family: 'Bebas Neue', sans-serif !important;
+      font-size: 32px !important;
+      letter-spacing: 0.04em !important;
+      color: #f5f5f0 !important;
+      border-bottom: 1px solid rgba(255,255,255,0.07) !important;
+      padding-bottom: 16px !important;
+    }
+    .usp-step {
+      display: flex;
+      gap: 20px;
+      padding: 20px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .usp-step:last-child { border-bottom: none; }
+    .usp-step-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 40px;
+      color: rgba(201,168,76,0.25);
+      line-height: 1;
+      min-width: 40px;
     }
 
     /* ── Editorial ── */
@@ -326,38 +377,29 @@ const HeroSection = () => (
     <GlobalStyles />
     <div className="hero-noise" />
 
-    {/* Vertical grid lines */}
     {[25, 50, 75].map(pct => (
       <div key={pct} className="hero-grid-line" style={{ left: `${pct}%` }} />
     ))}
 
-    {/* Accent circles */}
     <div className="hero-accent-circle" style={{ width: 500, height: 500, top: '-200px', right: '-150px' }} />
     <div className="hero-accent-circle" style={{ width: 200, height: 200, bottom: '10%', left: '5%' }} />
 
     <div style={{ position: 'relative', zIndex: 2, width: '100%', padding: '0 48px', maxWidth: 1400, margin: '0 auto' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center', minHeight: '100vh', paddingTop: 80 }}>
-
-        {/* Left */}
         <div>
           <div className="section-label" style={{ marginBottom: 28 }}>New Collection 2026</div>
-
           <div className="hero-title" style={{ marginBottom: 32 }}>
             <div>SEE THE</div>
             <div className="gold">WORLD</div>
             <div className="stroke-gold">CLEARLY</div>
           </div>
-
           <p className="hero-sub" style={{ marginBottom: 40 }}>
             Premium eyewear crafted for those who appreciate the intersection of precision and beauty. Every frame, a statement.
           </p>
-
           <div style={{ display: 'flex', gap: 12 }}>
             <a href="/eyeglasses" className="btn-primary">Shop Now →</a>
             <a href="/eyeglasses" className="btn-ghost">Browse All</a>
           </div>
-
-          {/* Stats */}
           <div style={{ display: 'flex', gap: 0, marginTop: 56, borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 32 }}>
             {[
               { val: '5K+', label: 'Frame Styles' },
@@ -373,7 +415,6 @@ const HeroSection = () => (
           </div>
         </div>
 
-        {/* Right — image */}
         <div className="hero-img-wrap" style={{ position: 'relative', zIndex: 1 }}>
           <div className="hero-img-frame" />
           <div style={{ position: 'relative', zIndex: 1 }}>
@@ -389,7 +430,6 @@ const HeroSection = () => (
                 />
               </Box>
             </AspectRatio>
-
             <div className="hero-tag" style={{ top: 24, left: 24 }}>Try at Home — Free</div>
             <div className="hero-price-tag">
               <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'var(--c-muted)', marginBottom: 4 }}>Starting from</div>
@@ -411,7 +451,7 @@ const HeroSection = () => (
 const items = ['Premium Frames', 'Free Home Trial', 'Anti-Glare Lenses', 'UV400 Protection', '5-Star Reviews', 'Same Day Dispatch', '1 Year Warranty', 'Virtual Try-On'];
 
 const MarqueeTicker = () => (
-  <div className="marquee-track" style={{ padding: '0' }}>
+  <div className="marquee-track">
     <div className="marquee-inner">
       {[...items, ...items].map((item, i) => (
         <div className="marquee-item" key={i}>
@@ -439,9 +479,7 @@ const CategoryGrid = () => (
           <div className="section-label">Collections</div>
           <div className="section-heading" style={{ fontSize: 'clamp(40px, 5vw, 64px)' }}>Shop By Category</div>
         </VStack>
-        <a href="/eyeglasses" className="btn-ghost" style={{ display: 'none' }}>View All →</a>
       </Flex>
-
       <Grid templateColumns={{ base: '1fr 1fr', lg: 'repeat(4, 1fr)' }} gap="2">
         {cats.map((cat) => (
           <RouterLink key={cat.path + cat.label} to={cat.path}>
@@ -507,7 +545,6 @@ const FeaturedProducts = ({ products = [] }) => (
         </VStack>
         <RouterLink to="/eyeglasses" className="btn-ghost">All Frames →</RouterLink>
       </Flex>
-
       {products.length > 0 ? (
         <SimpleGrid columns={{ base: 2, md: 3, lg: 4 }} spacing={{ base: '4', md: '6' }}>
           {products.slice(0, 8).map((p) => <ProductCard key={p._id || p.id} product={p} />)}
@@ -527,29 +564,178 @@ const FeaturedProducts = ({ products = [] }) => (
   </Box>
 );
 
-// ─── USP strip ────────────────────────────────────────────────────────────────
-const usps = [
-  { icon: '◈', title: 'Premium Lenses', desc: 'Anti-glare, UV protection & blue light blocking built-in on every lens.' },
-  { icon: '⊙', title: 'Virtual Try-On', desc: 'See how any frame looks on your face before buying.' },
-  { icon: '◇', title: 'Home Trial', desc: 'Order 5 frames. Try free at home. Keep only what you love.' },
-  { icon: '◉', title: 'Free Eye Test', desc: 'Complimentary checkup at 1000+ partner stores across India.' },
-];
+// ─── USP Modals ───────────────────────────────────────────────────────────────
 
-const USPStrip = () => (
-  <Box bg="var(--c-surface)">
-    <Box maxW="1400px" mx="auto" px={{ base: '6', md: '12' }} py={{ base: '14', md: '20' }}>
-      <div className="usp-grid">
-        {usps.map((u) => (
-          <div key={u.title} className="usp-cell">
-            <span className="usp-icon">{u.icon}</span>
-            <Text fontFamily="'Bebas Neue', sans-serif" fontSize="22px" color="var(--c-white)" letterSpacing="0.04em" mb="2">{u.title}</Text>
-            <Text fontFamily="'DM Sans', sans-serif" fontSize="12px" color="var(--c-muted)" lineHeight="1.8" fontWeight="300">{u.desc}</Text>
+const PremiumLensesModal = ({ isOpen, onClose }) => (
+  <Modal isOpen={isOpen} onClose={onClose} isCentered size="md">
+    <ModalOverlay bg="rgba(0,0,0,0.85)" backdropFilter="blur(4px)" />
+    <ModalContent className="usp-modal-content">
+      <ModalHeader className="usp-modal-header">Premium Lenses</ModalHeader>
+      <ModalCloseButton color="rgba(245,245,240,0.4)" />
+      <ModalBody pb={8}>
+        <Text fontFamily="'DM Sans'" fontSize="12px" color="rgba(245,245,240,0.4)" letterSpacing="0.15em" textTransform="uppercase" mb={6}>
+          Every lens includes
+        </Text>
+        {[
+          { title: 'Anti-Glare Coating', desc: 'Eliminates reflections from screens, headlights and indoor lighting for sharper, clearer vision.' },
+          { title: 'UV400 Protection', desc: 'Blocks 100% of UVA and UVB rays. Full protection for your eyes in all conditions.' },
+          { title: 'Blue Light Blocking', desc: 'Filters high-energy blue light from phones and monitors — reduces eye strain and improves sleep.' },
+          { title: '1 Year Warranty', desc: 'Every lens is covered. Scratches, defects, coating issues — we replace it, no questions asked.' },
+        ].map((item, i) => (
+          <div key={i} className="usp-step">
+            <div className="usp-step-num">{String(i + 1).padStart(2, '0')}</div>
+            <div>
+              <Text fontFamily="'Bebas Neue'" fontSize="18px" color="#f5f5f0" letterSpacing="0.04em" mb={1}>{item.title}</Text>
+              <Text fontFamily="'DM Sans'" fontSize="12px" color="rgba(245,245,240,0.45)" lineHeight="1.8" fontWeight="300">{item.desc}</Text>
+            </div>
           </div>
         ))}
-      </div>
-    </Box>
-  </Box>
+        <Box as="button" w="full" mt={6} py={4} bg="var(--c-gold)" color="#0a0a0a"
+          fontFamily="'DM Sans'" fontSize="11px" letterSpacing="0.2em" textTransform="uppercase" fontWeight="500"
+          onClick={() => { onClose(); window.location.href = '/eyeglasses'; }}>
+          Shop Lenses →
+        </Box>
+      </ModalBody>
+    </ModalContent>
+  </Modal>
 );
+
+const VirtualTryOnModal = ({ isOpen, onClose }) => (
+  <Modal isOpen={isOpen} onClose={onClose} isCentered size="md">
+    <ModalOverlay bg="rgba(0,0,0,0.85)" backdropFilter="blur(4px)" />
+    <ModalContent className="usp-modal-content">
+      <ModalHeader className="usp-modal-header">Virtual Try-On</ModalHeader>
+      <ModalCloseButton color="rgba(245,245,240,0.4)" />
+      <ModalBody pb={8}>
+        <Box border="1px solid rgba(201,168,76,0.2)" p={6} mb={6} textAlign="center">
+          <Text fontSize="48px" mb={3}>⊙</Text>
+          <Text fontFamily="'Bebas Neue'" fontSize="24px" color="var(--c-gold)" letterSpacing="0.08em" mb={2}>
+            Coming Soon
+          </Text>
+          <Text fontFamily="'DM Sans'" fontSize="12px" color="rgba(245,245,240,0.4)" lineHeight="1.8" fontWeight="300">
+            Our AR-powered virtual try-on is in development. Soon you'll be able to see exactly how any frame looks on your face — live, in your browser, no app needed.
+          </Text>
+        </Box>
+        <Text fontFamily="'DM Sans'" fontSize="11px" color="rgba(245,245,240,0.3)" letterSpacing="0.1em" textAlign="center" mb={5}>
+          In the meantime, use our free home trial —<br />order 5 frames and try them on at home.
+        </Text>
+        <Box as="button" w="full" py={4} bg="var(--c-gold)" color="#0a0a0a"
+          fontFamily="'DM Sans'" fontSize="11px" letterSpacing="0.2em" textTransform="uppercase" fontWeight="500"
+          onClick={() => { onClose(); window.location.href = '/eyeglasses'; }}>
+          Try Home Trial Instead →
+        </Box>
+      </ModalBody>
+    </ModalContent>
+  </Modal>
+);
+
+const HomeTrialModal = ({ isOpen, onClose }) => (
+  <Modal isOpen={isOpen} onClose={onClose} isCentered size="md">
+    <ModalOverlay bg="rgba(0,0,0,0.85)" backdropFilter="blur(4px)" />
+    <ModalContent className="usp-modal-content">
+      <ModalHeader className="usp-modal-header">Home Trial</ModalHeader>
+      <ModalCloseButton color="rgba(245,245,240,0.4)" />
+      <ModalBody pb={8}>
+        <Text fontFamily="'DM Sans'" fontSize="12px" color="rgba(245,245,240,0.4)" letterSpacing="0.15em" textTransform="uppercase" mb={6}>
+          How it works
+        </Text>
+        {[
+          { title: 'Pick 5 Frames', desc: 'Browse our collection and select up to 5 frames you want to try.' },
+          { title: 'We Ship Free', desc: 'Frames arrive at your door within 24 hours, fully insured, at zero cost.' },
+          { title: 'Try for 7 Days', desc: 'Wear them around the house, get opinions from family and friends. No rush.' },
+          { title: 'Keep What You Love', desc: 'Order your favourite with your prescription. Return the rest — free pickup.' },
+        ].map((item, i) => (
+          <div key={i} className="usp-step">
+            <div className="usp-step-num">{String(i + 1).padStart(2, '0')}</div>
+            <div>
+              <Text fontFamily="'Bebas Neue'" fontSize="18px" color="#f5f5f0" letterSpacing="0.04em" mb={1}>{item.title}</Text>
+              <Text fontFamily="'DM Sans'" fontSize="12px" color="rgba(245,245,240,0.45)" lineHeight="1.8" fontWeight="300">{item.desc}</Text>
+            </div>
+          </div>
+        ))}
+        <Box as="button" w="full" mt={6} py={4} bg="var(--c-gold)" color="#0a0a0a"
+          fontFamily="'DM Sans'" fontSize="11px" letterSpacing="0.2em" textTransform="uppercase" fontWeight="500"
+          onClick={() => { onClose(); window.location.href = '/eyeglasses'; }}>
+          Start Home Trial →
+        </Box>
+      </ModalBody>
+    </ModalContent>
+  </Modal>
+);
+
+const FreeEyeTestModal = ({ isOpen, onClose }) => (
+  <Modal isOpen={isOpen} onClose={onClose} isCentered size="md">
+    <ModalOverlay bg="rgba(0,0,0,0.85)" backdropFilter="blur(4px)" />
+    <ModalContent className="usp-modal-content">
+      <ModalHeader className="usp-modal-header">Free Eye Test</ModalHeader>
+      <ModalCloseButton color="rgba(245,245,240,0.4)" />
+      <ModalBody pb={8}>
+        <Text fontFamily="'DM Sans'" fontSize="12px" color="rgba(245,245,240,0.4)" letterSpacing="0.15em" textTransform="uppercase" mb={6}>
+          What's included
+        </Text>
+        {[
+          { title: 'Full Vision Checkup', desc: 'Comprehensive eye exam including near, far and colour vision assessment.' },
+          { title: 'Prescription Update', desc: 'Walk out with your latest prescription — ready to order your new frames immediately.' },
+          { title: '1000+ Partner Stores', desc: 'Available at our partner opticians across India. No appointment needed at most locations.' },
+          { title: 'Completely Free', desc: 'No hidden charges. The eye test is complimentary with any Clear Vision purchase.' },
+        ].map((item, i) => (
+          <div key={i} className="usp-step">
+            <div className="usp-step-num">{String(i + 1).padStart(2, '0')}</div>
+            <div>
+              <Text fontFamily="'Bebas Neue'" fontSize="18px" color="#f5f5f0" letterSpacing="0.04em" mb={1}>{item.title}</Text>
+              <Text fontFamily="'DM Sans'" fontSize="12px" color="rgba(245,245,240,0.45)" lineHeight="1.8" fontWeight="300">{item.desc}</Text>
+            </div>
+          </div>
+        ))}
+        <Box mt={6} p={4} border="1px solid rgba(201,168,76,0.2)" textAlign="center">
+          <Text fontFamily="'DM Sans'" fontSize="11px" color="rgba(245,245,240,0.35)" letterSpacing="0.1em">
+            Call us to find a store near you
+          </Text>
+          <Text fontFamily="'Bebas Neue'" fontSize="28px" color="var(--c-gold)" letterSpacing="0.08em" mt={1}>
+            1800-111-111
+          </Text>
+        </Box>
+      </ModalBody>
+    </ModalContent>
+  </Modal>
+);
+
+// ─── USP Strip ────────────────────────────────────────────────────────────────
+const USPStrip = () => {
+  const lenses   = useDisclosure();
+  const tryon    = useDisclosure();
+  const trial    = useDisclosure();
+  const eyetest  = useDisclosure();
+
+  const usps = [
+    { icon: '◈', title: 'Premium Lenses',  desc: 'Anti-glare, UV protection & blue light blocking built-in on every lens.', onClick: lenses.onOpen },
+    { icon: '⊙', title: 'Virtual Try-On',  desc: 'See how any frame looks on your face before buying.',                    onClick: tryon.onOpen },
+    { icon: '◇', title: 'Home Trial',       desc: 'Order 5 frames. Try free at home. Keep only what you love.',            onClick: trial.onOpen },
+    { icon: '◉', title: 'Free Eye Test',    desc: 'Complimentary checkup at 1000+ partner stores across India.',           onClick: eyetest.onOpen },
+  ];
+
+  return (
+    <Box bg="var(--c-surface)">
+      <Box maxW="1400px" mx="auto" px={{ base: '6', md: '12' }} py={{ base: '14', md: '20' }}>
+        <div className="usp-grid">
+          {usps.map((u) => (
+            <div key={u.title} className="usp-cell" onClick={u.onClick}>
+              <span className="usp-icon">{u.icon}</span>
+              <Text fontFamily="'Bebas Neue', sans-serif" fontSize="22px" color="var(--c-white)" letterSpacing="0.04em" mb="2">{u.title}</Text>
+              <Text fontFamily="'DM Sans', sans-serif" fontSize="12px" color="var(--c-muted)" lineHeight="1.8" fontWeight="300">{u.desc}</Text>
+              <span className="usp-arrow">Learn more →</span>
+            </div>
+          ))}
+        </div>
+      </Box>
+
+      <PremiumLensesModal isOpen={lenses.isOpen}  onClose={lenses.onClose}  />
+      <VirtualTryOnModal  isOpen={tryon.isOpen}   onClose={tryon.onClose}   />
+      <HomeTrialModal     isOpen={trial.isOpen}   onClose={trial.onClose}   />
+      <FreeEyeTestModal   isOpen={eyetest.isOpen} onClose={eyetest.onClose} />
+    </Box>
+  );
+};
 
 // ─── Editorial ────────────────────────────────────────────────────────────────
 const EditorialBanner = () => (
@@ -571,7 +757,6 @@ const EditorialBanner = () => (
             </Box>
           </div>
         </RouterLink>
-
         <VStack spacing="2">
           {[
             { label: "Kids Collection", img: "https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=900&q=80" },
@@ -632,7 +817,7 @@ const Testimonials = () => (
   </Box>
 );
 
-// ─── Footer ────────────────────────────────────────────────────────────────────
+// ─── Footer ───────────────────────────────────────────────────────────────────
 const footerCols = [
   {
     title: 'Shop',
@@ -682,7 +867,6 @@ const Footer = () => (
             ))}
           </HStack>
         </GridItem>
-
         {footerCols.map((col) => (
           <GridItem key={col.title}>
             <Text fontFamily="'DM Sans', sans-serif" fontSize="10px" letterSpacing="0.25em" textTransform="uppercase" color="var(--c-gold)" mb="5" fontWeight="500">{col.title}</Text>
