@@ -16,6 +16,8 @@ const { AdminModel } = require('./model/Admin.model');
 const { Adminouter } = require('./routes/AdminRouter');
 const { MustBeSigned } = require('./middleware/authenticate');
 const orderRouter = require('./routes/Order.routes');
+const paymentRoutes = require("./routes/payment");
+app.use("/api/payment", paymentRoutes);
 colors.setTheme({
     silly: 'rainbow',
     input: 'grey',

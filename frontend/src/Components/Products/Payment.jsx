@@ -59,7 +59,29 @@ const darkStyles = `
   .pay-progress-fill {
     height: 100%; background: #C9A84C; transition: width 0.4s ease;
   }
+  .phone-input-wrapper {
+    display: flex; gap: 0;
+  }
+  .phone-code {
+    background: #1e1e1e; border: 1px solid rgba(255,255,255,0.07);
+    border-right: none; color: #C9A84C;
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    padding: 12px 14px; white-space: nowrap; min-width: 60px;
+    display: flex; align-items: center;
+  }
 `;
+
+const countryCodes = {
+  India: '+91',
+  'United States': '+1',
+  Canada: '+1',
+  'United Kingdom': '+44',
+  Australia: '+61',
+  Germany: '+49',
+  France: '+33',
+  UAE: '+971',
+  Singapore: '+65',
+};
 
 const FormField = ({ label, children }) => (
   <Box mb="5">
@@ -68,37 +90,60 @@ const FormField = ({ label, children }) => (
   </Box>
 );
 
-const ShippingForm = () => (
-  <Box>
-    <Text fontFamily="'Bebas Neue', sans-serif" fontSize="32px" letterSpacing="0.04em" color="#f5f5f0" mb="8">Shipping Address</Text>
-    <FormField label="Country / Region">
-      <select className="pay-select">
-        <option>India</option>
-        <option>United States</option>
-        <option>Canada</option>
-        <option>United Kingdom</option>
-      </select>
-    </FormField>
-    <FormField label="Street Address">
-      <input className="pay-input" type="text" placeholder="House no., Street name" />
-    </FormField>
-    <SimpleGrid columns={3} spacing="4">
-      <FormField label="City"><input className="pay-input" type="text" placeholder="Mumbai" /></FormField>
-      <FormField label="State"><input className="pay-input" type="text" placeholder="Maharashtra" /></FormField>
-      <FormField label="PIN Code"><input className="pay-input" type="text" placeholder="400001" /></FormField>
-    </SimpleGrid>
-    <FormField label="Phone Number">
-      <input className="pay-input" type="tel" placeholder="+91 XXXXX XXXXX" />
-    </FormField>
-  </Box>
-);
+const ShippingForm = ({ shippingData, setShippingData }) => {
+  const handleCountryChange = (e) => {
+    setShippingData({ ...shippingData, country: e.target.value });
+  };
+
+  return (
+    <Box>
+      <Text fontFamily="'Bebas Neue', sans-serif" fontSize="32px" letterSpacing="0.04em" color="#f5f5f0" mb="8">Shipping Address</Text>
+      <FormField label="Country / Region">
+        <select className="pay-select" value={shippingData.country} onChange={handleCountryChange}>
+          {Object.keys(countryCodes).map(c => (
+            <option key={c}>{c}</option>
+          ))}
+        </select>
+      </FormField>
+      <FormField label="Street Address">
+        <input className="pay-input" type="text" placeholder="House no., Street name"
+          value={shippingData.street}
+          onChange={e => setShippingData({ ...shippingData, street: e.target.value })} />
+      </FormField>
+      <SimpleGrid columns={3} spacing="4">
+        <FormField label="City">
+          <input className="pay-input" type="text" placeholder="Mumbai"
+            value={shippingData.city}
+            onChange={e => setShippingData({ ...shippingData, city: e.target.value })} />
+        </FormField>
+        <FormField label="State">
+          <input className="pay-input" type="text" placeholder="Maharashtra"
+            value={shippingData.state}
+            onChange={e => setShippingData({ ...shippingData, state: e.target.value })} />
+        </FormField>
+        <FormField label="PIN Code">
+          <input className="pay-input" type="text" placeholder="400001"
+            value={shippingData.pin}
+            onChange={e => setShippingData({ ...shippingData, pin: e.target.value })} />
+        </FormField>
+      </SimpleGrid>
+      <FormField label="Phone Number">
+        <div className="phone-input-wrapper">
+          <span className="phone-code">{countryCodes[shippingData.country] || '+91'}</span>
+          <input className="pay-input" type="tel" placeholder="XXXXX XXXXX"
+            value={shippingData.phone}
+            onChange={e => setShippingData({ ...shippingData, phone: e.target.value })} />
+        </div>
+      </FormField>
+    </Box>
+  );
+};
 
 const PaymentForm = ({ paymentMethod, setPaymentMethod }) => {
   const [showCVV, setShowCVV] = useState(false);
 
   const methods = [
-    { id: 'card', label: 'Credit / Debit Card', tags: [{ label: 'VISA', bg: '#1a56db' }, { label: 'MC', bg: '#e02424' }, { label: 'RUPAY', bg: '#057a55' }] },
-    { id: 'upi', label: 'UPI', tags: [{ label: 'GPay', bg: '#15803d' }, { label: 'PhonePe', bg: '#3730a3' }, { label: 'Paytm', bg: '#b45309' }] },
+    { id: 'razorpay', label: 'Pay Online (Razorpay)', tags: [{ label: 'VISA', bg: '#1a56db' }, { label: 'UPI', bg: '#15803d' }, { label: 'MC', bg: '#e02424' }] },
     { id: 'cod', label: 'Cash on Delivery', tags: [] },
   ];
 
@@ -129,35 +174,13 @@ const PaymentForm = ({ paymentMethod, setPaymentMethod }) => {
 
       <Divider borderColor="rgba(255,255,255,0.07)" mb="6" />
 
-      {paymentMethod === 'card' && (
-        <VStack spacing="0" align="stretch">
-          <FormField label="Card Number">
-            <input className="pay-input" type="text" placeholder="1234 5678 9012 3456" maxLength={19} />
-          </FormField>
-          <SimpleGrid columns={2} spacing="4">
-            <FormField label="Expiry"><input className="pay-input" type="text" placeholder="MM/YY" maxLength={5} /></FormField>
-            <FormField label="CVV">
-              <Box position="relative">
-                <input className="pay-input" type={showCVV ? 'text' : 'password'} placeholder="•••" maxLength={4} style={{ paddingRight: 40 }} />
-                <Box position="absolute" right="12px" top="50%" transform="translateY(-50%)" cursor="pointer" onClick={() => setShowCVV(!showCVV)} color="rgba(245,245,240,0.4)">
-                  {showCVV ? <ViewOffIcon /> : <ViewIcon />}
-                </Box>
-              </Box>
-            </FormField>
-          </SimpleGrid>
-          <FormField label="Name on Card">
-            <input className="pay-input" type="text" placeholder="As printed on card" />
-          </FormField>
-        </VStack>
-      )}
-
-      {paymentMethod === 'upi' && (
-        <VStack spacing="0" align="stretch">
-          <FormField label="UPI ID">
-            <input className="pay-input" type="text" placeholder="yourname@upi" />
-          </FormField>
-          <Text fontFamily="'DM Sans', sans-serif" fontSize="11px" color="rgba(245,245,240,0.3)">e.g. name@okaxis, name@ybl, name@paytm</Text>
-        </VStack>
+      {paymentMethod === 'razorpay' && (
+        <Box border="1px solid rgba(201,168,76,0.2)" bg="rgba(201,168,76,0.05)" p="5">
+          <Text fontFamily="'DM Sans', sans-serif" fontSize="13px" color="#C9A84C" mb="2" fontWeight="500">Razorpay Secure Checkout</Text>
+          <Text fontFamily="'DM Sans', sans-serif" fontSize="12px" color="rgba(245,245,240,0.4)" lineHeight="1.8">
+            You will be redirected to Razorpay's secure payment page. Supports Cards, UPI, Net Banking & Wallets.
+          </Text>
+        </Box>
       )}
 
       {paymentMethod === 'cod' && (
@@ -174,42 +197,123 @@ export default function Payment() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [step, setStep] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [paymentMethod, setPaymentMethod] = useState('razorpay');
+  const [shippingData, setShippingData] = useState({
+    country: 'India', street: '', city: '', state: '', pin: '', phone: ''
+  });
   const cartItems = useSelector((state) => state.cartReducer?.cartItems || []);
 
-  const handlePlaceOrder = async () => {
-    const userData = JSON.parse(localStorage.getItem("userData")) || {};
-    const userID = userData._id || userData.id || "guest";
-    const userName = userData.name || userData.username || "Guest User";
+  const userData = JSON.parse(localStorage.getItem("userData")) || {};
+  const userID = userData._id || userData.id || "guest";
+  const userName = userData.name || userData.username || "Guest User";
 
-    const orderPayload = cartItems.map((item) => ({
-      title: item.title || item.name,
-      image: item.image,
-      price: item.price,
-      quantity: item.quantity || 1,
-      paymentMethod,
-      status: 'Placed',
-      userID,
-      userName,
-    }));
+  const totalAmount = cartItems.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
 
+  const orderPayload = cartItems.map((item) => ({
+    title: item.title || item.name,
+    image: item.image,
+    price: item.price,
+    quantity: item.quantity || 1,
+    status: 'Placed',
+    userID,
+    userName,
+  }));
+
+  const handleRazorpayPayment = async () => {
+    try {
+      // Load Razorpay script dynamically
+      await new Promise((resolve, reject) => {
+        if (window.Razorpay) return resolve();
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.onload = resolve;
+        script.onerror = reject;
+        document.body.appendChild(script);
+      });
+
+      // Step 1: Create order on backend
+      const { data } = await axios.post(`${process.env.REACT_APP_BASEURL}/api/payment/create-order`, {
+        amount: totalAmount,
+        customerName: userName,
+      });
+      if (!data.success) throw new Error('Failed to create order');
+
+      // Step 2: Open Razorpay popup
+      const options = {
+        key: data.keyId,
+        amount: data.order.amount,
+        currency: data.order.currency,
+        name: 'ClearVision Optics',
+        description: 'Eyewear Purchase',
+        order_id: data.order.id,
+        handler: async function (response) {
+          // Step 3: Verify payment on backend and save order
+          try {
+            const verifyRes = await axios.post(`${process.env.REACT_APP_BASEURL}/api/payment/verify`, {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              orderItems: orderPayload,
+            });
+
+            if (verifyRes.data.success) {
+              Swal.fire({
+                title: 'Payment Successful!',
+                text: 'Your order has been placed successfully.',
+                icon: 'success',
+                confirmButtonColor: '#C9A84C',
+                background: '#111',
+                color: '#f5f5f0',
+              }).then(() => {
+                dispatch(clearCart());
+                navigate('/myorders');
+              });
+            }
+          } catch (err) {
+            Swal.fire({ title: 'Verification Failed', text: 'Please contact support.', icon: 'error', background: '#111', color: '#f5f5f0' });
+          }
+        },
+        prefill: {
+          name: userName,
+          contact: `${countryCodes[shippingData.country]}${shippingData.phone}`,
+        },
+        theme: { color: '#C9A84C' },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+
+    } catch (err) {
+      console.error('Payment error:', err);
+      Swal.fire({ title: 'Payment Failed', text: 'Something went wrong. Please try again.', icon: 'error', background: '#111', color: '#f5f5f0' });
+    }
+  };
+
+  const handleCOD = async () => {
     try {
       await axios.post(`${process.env.REACT_APP_BASEURL}/orders`, orderPayload);
+      Swal.fire({
+        title: 'Order Placed!',
+        text: 'Your order will be delivered in 2–3 business days.',
+        icon: 'success',
+        confirmButtonColor: '#C9A84C',
+        background: '#111',
+        color: '#f5f5f0',
+      }).then(() => {
+        dispatch(clearCart());
+        navigate('/myorders');
+      });
     } catch (err) {
       console.error('Order save failed:', err);
     }
+  };
 
-    Swal.fire({
-      title: 'Order Placed!',
-      text: `Delivery in 2–3 business days. Payment: ${paymentMethod.toUpperCase()}`,
-      icon: 'success',
-      confirmButtonColor: '#C9A84C',
-      background: '#111',
-      color: '#f5f5f0',
-    }).then(() => {
-      dispatch(clearCart());
-      navigate('/');
-    });
+  const handlePlaceOrder = () => {
+    if (paymentMethod === 'razorpay') {
+      handleRazorpayPayment();
+    } else {
+      handleCOD();
+    }
   };
 
   return (
@@ -241,7 +345,26 @@ export default function Payment() {
 
         {/* Form */}
         <Box mb="10">
-          {step === 1 ? <ShippingForm /> : <PaymentForm paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} />}
+          {step === 1
+            ? <ShippingForm shippingData={shippingData} setShippingData={setShippingData} />
+            : <PaymentForm paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} />
+          }
+        </Box>
+
+        {/* Order summary */}
+        <Box mb="6" p="4" border="1px solid rgba(255,255,255,0.07)">
+          <Text fontFamily="'DM Sans', sans-serif" fontSize="11px" letterSpacing="0.15em" textTransform="uppercase" color="rgba(245,245,240,0.4)" mb="3">Order Summary</Text>
+          {cartItems.map((item, i) => (
+            <Flex key={i} justify="space-between" mb="2">
+              <Text fontFamily="'DM Sans', sans-serif" fontSize="12px" color="rgba(245,245,240,0.7)">{item.title || item.name} × {item.quantity || 1}</Text>
+              <Text fontFamily="'DM Sans', sans-serif" fontSize="12px" color="#f5f5f0">₹{(item.price * (item.quantity || 1)).toLocaleString()}</Text>
+            </Flex>
+          ))}
+          <Divider borderColor="rgba(255,255,255,0.07)" my="3" />
+          <Flex justify="space-between">
+            <Text fontFamily="'DM Sans', sans-serif" fontSize="13px" color="#f5f5f0" fontWeight="500">Total</Text>
+            <Text fontFamily="'DM Sans', sans-serif" fontSize="13px" color="#C9A84C" fontWeight="500">₹{totalAmount.toLocaleString()}</Text>
+          </Flex>
         </Box>
 
         {/* Buttons */}
@@ -279,7 +402,7 @@ export default function Payment() {
                 textTransform: 'uppercase', fontWeight: 500, padding: '14px 32px', cursor: 'pointer',
               }}
             >
-              Place Order →
+              {paymentMethod === 'razorpay' ? 'Pay Now →' : 'Place Order →'}
             </button>
           )}
         </Flex>
